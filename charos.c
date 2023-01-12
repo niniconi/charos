@@ -20,7 +20,22 @@ int type =
     WT_ICON;
 
 
-int main(void){
+int main(int argc,char **argv){
+    int k;
+    while((k=getopt(argc, argv,"vh")) != -1){
+        switch (k){
+            case 'v':
+                printf("version 0.0.1\n");
+                return 0;
+            case 'h':
+                printf("\twasd 上下左右移动\n");
+                printf("\tn 新建窗口\n");
+                printf("\tx 关闭窗口\n");
+                printf("\thjkl 改变大小\n");
+                printf("\tq 退出\n");
+                return 0;
+        }
+    }
     init();
     return 0;
 }
