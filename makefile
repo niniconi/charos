@@ -1,6 +1,7 @@
 header=charos.h cat/cat.h
 source=winmgr.c util.c cat/cat.c cmd-win.c cmd-charos.c charos.c event.c listenMouse.c listenKey.c
 obj=winmgr.o util.o cat.o cmd-win.o cmd-charos.o charos.o event.o listenMouse.o listenKey.o
+all:build
 clean:
 	rm $(obj) -f
 	rm *.out -f
