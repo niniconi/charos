@@ -2,7 +2,11 @@
 #include <stdio.h>
 #include "charos.h"
 void quit(void){
+    int i;
     if(wm != NULL){
+        for(i = 0;i<wm->top;i++){
+            free(wm->windows[i].bitmaps);
+        }
         free(wm);
         INFO(__FUNCTION__,"free wm");
     }
@@ -15,5 +19,6 @@ void quit(void){
         free(sm);
         INFO(__FUNCTION__,"free sm");
     }
+    printf("\033[?25h");
     exit(EXIT_SUCCESS);
 }

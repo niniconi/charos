@@ -1,5 +1,9 @@
+#include <malloc.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
+#include "winmgr.h"
 #include "cat/cat.h"
 #include "charos.h"
 
@@ -17,7 +21,7 @@ char WIN_CLOSE_BTN      [4] = "x";
 char WIN_MAXIMIZE_BTN   [4] = "☐";
 char WIN_MINIMIZE_BTN   [4] = "_";
 
-struct pixel buf[WIDTH][HEIGHT];
+struct framebuf *framebuf=NULL;
 
 struct windowsManager * wm = NULL;
 
@@ -25,13 +29,21 @@ char defualt_win_icon[6] = {
     'C','o','n',
     'W','I','N'
 };
+win *default_wins[20]={
+    [WS_DESKTOP] = NULL,
+    [WS_TASKBAR] = NULL
+};
 
 struct windowsManager* init_WM(void){
+    //init framebuf
+    framebuf = malloc(sizeof(struct framebuf));
+
     wm = malloc(sizeof(struct windowsManager) + WM_LENGTH*sizeof(struct window));
     if(wm == NULL)return NULL;
     wm->length = WM_LENGTH;
     wm->top = -1;
     wm->is_commit = 0;
+    INIT_BITSMAP(framebuf->bitmaps,4096*4096);
     return wm;
 }
 win * malloc_window(struct windowsManager * wm){
@@ -40,6 +52,8 @@ win * malloc_window(struct windowsManager * wm){
     if(wm->top >= wm->length) return NULL;
     struct window *w = &(wm->windows[wm->top]);
     WIN_SET_DEFAULT_ATTR(w);
+
+    INIT_BITSMAP(w->bitmaps, w->width*w->height);
 
     set_d_mem(w,BLACK_BG,WHITE,BACKGROUND);
     return w;
@@ -56,12 +70,14 @@ int set_d_mem(win *w,char bgcolor,char color,char *c){
     }
     return 0;
 }
-win * malloc_window_s(struct windowsManager * wm,char bgcolor,char color,char *c){
+win * malloc_window_with_property(struct windowsManager * wm,char bgcolor,char color,char *c){
     if(wm->top < -1) return NULL;
     wm->top++;
     if(wm->top >= wm->length) return NULL;
     struct window *w = &(wm->windows[wm->top]);
     WIN_SET_DEFAULT_ATTR(w);
+
+    INIT_BITSMAP(w->bitmaps, w->width*w->height);
 
     set_d_mem(w,bgcolor,color,c);
     return w;
@@ -92,6 +108,9 @@ int draw_all_windows(struct windowsManager * wm){
 }
 
 int draw_windows(win* winptr){
+    //draw bits maps
+    /* setbitmaps(framebuf->bitmaps, winptr->bitmaps, 4096, winptr->height, winptr->width); */
+
     int x = winptr->x,
         y = winptr->y,
         width = winptr->width,
@@ -101,32 +120,32 @@ int draw_windows(win* winptr){
     if(flag & WT_MAXIMIZE && !(flag & WT_MINIMIZE)){
         x=0;
         y=0;
-        width=WIDTH;
-        height=HEIGHT;
+        width=width;
+        height=height;
     }
     if(flag & WT_FRAME){
         for(int indexy = y+1;indexy<y+height-1;indexy++){
-            SET_CHAR(buf[x                ][indexy].c,WIN_LEFT);
-            SET_CHAR(buf[x+width-1        ][indexy].c,WIN_RIGHT);
+            SET_CHAR(framebuf->buf[x                ][indexy].c,WIN_LEFT);
+            SET_CHAR(framebuf->buf[x+width-1        ][indexy].c,WIN_RIGHT);
         }
         for(int indexx = x+1;indexx<x+width-1;indexx++){
-            SET_CHAR(buf[indexx][y                 ].c,WIN_TOP);
-            SET_CHAR(buf[indexx][y+height-1        ].c,WIN_BOTTOM);
+            SET_CHAR(framebuf->buf[indexx][y                 ].c,WIN_TOP);
+            SET_CHAR(framebuf->buf[indexx][y+height-1        ].c,WIN_BOTTOM);
         }
-        SET_CHAR(buf[x                ][y                 ].c,WIN_TOP_LEFT);
-        SET_CHAR(buf[x                ][y+height-1        ].c,WIN_BOTTOM_LEFT);
-        SET_CHAR(buf[x+width-1        ][y                 ].c,WIN_TOP_RIGHT);
-        SET_CHAR(buf[x+width-1        ][y+height-1        ].c,WIN_BOTTOM_RIGHT);
+        SET_CHAR(framebuf->buf[x                ][y                 ].c,WIN_TOP_LEFT);
+        SET_CHAR(framebuf->buf[x                ][y+height-1        ].c,WIN_BOTTOM_LEFT);
+        SET_CHAR(framebuf->buf[x+width-1        ][y                 ].c,WIN_TOP_RIGHT);
+        SET_CHAR(framebuf->buf[x+width-1        ][y+height-1        ].c,WIN_BOTTOM_RIGHT);
     }
     if(flag & WT_COTROL_BTN){
         if(flag & WT_FRAME){
-            SET_CHAR(buf[x+width-2][y+1               ].c,WIN_CLOSE_BTN);
-            SET_CHAR(buf[x+width-3][y+1               ].c,WIN_MAXIMIZE_BTN);
-            SET_CHAR(buf[x+width-4][y+1               ].c,WIN_MINIMIZE_BTN);
+            SET_CHAR(framebuf->buf[x+width-2][y+1               ].c,WIN_CLOSE_BTN);
+            SET_CHAR(framebuf->buf[x+width-3][y+1               ].c,WIN_MAXIMIZE_BTN);
+            SET_CHAR(framebuf->buf[x+width-4][y+1               ].c,WIN_MINIMIZE_BTN);
         }else{
-            SET_CHAR(buf[x+width-1][y                 ].c,WIN_CLOSE_BTN);
-            SET_CHAR(buf[x+width-2][y                 ].c,WIN_MAXIMIZE_BTN);
-            SET_CHAR(buf[x+width-3][y                 ].c,WIN_MINIMIZE_BTN);
+            SET_CHAR(framebuf->buf[x+width-1][y                 ].c,WIN_CLOSE_BTN);
+            SET_CHAR(framebuf->buf[x+width-2][y                 ].c,WIN_MAXIMIZE_BTN);
+            SET_CHAR(framebuf->buf[x+width-3][y                 ].c,WIN_MINIMIZE_BTN);
         }
     }
 
@@ -168,9 +187,9 @@ int draw_windows(win* winptr){
     for(i=0;i<xsize;i++){
         for(j=0;j<ysize;j++){
             int m=i+xstart,n=j+ystart;
-            SET_CHAR(buf[m][n].c,winptr->d_mem[i][j].c);
-            buf[m][n].color      = winptr->d_mem[i][j].color;
-            buf[m][n].background = winptr->d_mem[i][j].background;
+            SET_CHAR(framebuf->buf[m][n].c,winptr->d_mem[i][j].c);
+            framebuf->buf[m][n].color      = winptr->d_mem[i][j].color;
+            framebuf->buf[m][n].background = winptr->d_mem[i][j].background;
         }
     }
     if(flag & WT_TITLE){
@@ -203,9 +222,9 @@ int draw_string(string *s,int x_position,int y_position,int xsize,int ysize,char
             y++;
         }else{
             if(s->s[i] != '\0'){
-                buf[x][y].c[0] = s->s[i];
-                buf[x][y].color = color;
-                buf[x][y].background = bg_color;
+                framebuf->buf[x][y].c[0] = s->s[i];
+                framebuf->buf[x][y].color = color;
+                framebuf->buf[x][y].background = bg_color;
             }
         }
         x++;
@@ -230,6 +249,7 @@ int win_draw_string(win *w,string *s,int x_position,int y_position,int xsize,int
                 w->d_mem[x][y].c[0] = s->s[i];
                 w->d_mem[x][y].color = color;
                 w->d_mem[x][y].background = bg_color;
+                fillbitmaps(w->bitmaps,w->width,x,y,1);
             }
         }
         x++;
@@ -281,4 +301,8 @@ int win_draw_circle(win *w,int x,int y,int r,struct pixel * point){
         }
     }
     return 0;
+}
+
+void flush_size(){
+    
 }

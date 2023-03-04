@@ -14,7 +14,7 @@ strManager* init_SM(void){
 }
 strManager* enlarge_sm(void){
     if(sm != NULL){
-        printf("%s:size=%d\n",__FUNCTION__,sizeof(strManager) + (sm->length + STRUBG_MANAGER_GRAIN_SIZE)*sizeof(struct string *));
+        /* printf("%s:size=%lu\n",__FUNCTION__,sizeof(strManager) + (sm->length + STRUBG_MANAGER_GRAIN_SIZE)*sizeof(struct string *)); */
         sm = realloc(sm,sizeof(strManager) + (sm->length + STRUBG_MANAGER_GRAIN_SIZE)*sizeof(struct string *));
         sm->length += STRUBG_MANAGER_GRAIN_SIZE;
         return sm;
@@ -65,4 +65,24 @@ string* new_string_z(const char*s){
 }
 int read_properties(const char *path){
     FILE *properties = fopen(path,"r");
+    return -1;
+}
+
+inline int isfillbitmaps(char *maps,int width,int x,int y){
+    return *(maps + (y*width + x)/sizeof(char)) & (128 >> (y*width + x) % sizeof(char));
+}
+inline void fillbitmaps(char *maps,int width,int x,int y,int value){
+    if(value)
+        *(maps + (y*width + x)/sizeof(char)) |= 128 >> ((y*width + x) % sizeof(char));
+    else
+        *(maps + (y*width + x)/sizeof(char)) &= ~(128 >> ((y*width + x) % sizeof(char)));
+}
+inline void setbitmaps(char *master,char *slave,int master_xsize,int slave_xsize,int slave_ysize){
+    int x,y;
+    for (x=0 ; x<slave_xsize; x++) {
+        for (y=0; y<slave_ysize; y++) {
+            //TODO : 做一些优化
+            *(master + (y*master_xsize + x)/sizeof(char)) |= *(slave + (y*slave_xsize + x)/sizeof(char));
+        }
+    }
 }

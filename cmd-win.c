@@ -17,12 +17,12 @@ void win_move_up(void){
 }
 void win_move_down(void){
     win *w = ACTIVE_WIN;
-    if(w->y+w->height<HEIGHT)
+    if(w->y+w->height<height)
         w->y++;
 }
 void win_move_right(void){
     win *w = ACTIVE_WIN;
-    if(w->x+w->width<WIDTH)
+    if(w->x+w->width<width)
         w->x++;
 }
 void win_move_left(void){

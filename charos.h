@@ -1,9 +1,14 @@
-#pragma once
+#ifndef __CHAROS_H
+#define __CHAROS_H
 #define STOP_ON_STARTUP 2
-#define INFO(l,s) printf("[info][%s]:%s\n",l,s)
 
-#define WIDTH                    192
-#define HEIGHT                   48
+#define INFO(label,args...)   printf("[info ][%s]:%s\n",label,##args)
+#define DEBUG(label,args...)  printf("[debug][%s]:%s\n",label,##args)
+#define ERROR(label,args...)  printf("[error][%s]:%s\n",label,##args)
+/* #define WIDTH 64 */
+/* #define HEIGHT 32 */
+extern unsigned int width;
+extern unsigned int height;
 
 #define WIN_WIDTH                256
 #define WIN_HEIGHT               192
@@ -78,7 +83,7 @@
 #define EVENT_KEY_BUF_SIZE           32
 #define EVENT_MOUSE_BUF_SIZE         8
 
-#define KEY_NULL                     -1
+#define KEY_NULL                     (char)-1
 #define KEY_PUT_FAILED               1
 #define KEY_PUT_SUCCESS              0
 
@@ -87,24 +92,35 @@
 
 #define FPS(f) ((1000*1000)/(f))
 #define SET_CHAR(d,s) \
-    d[0] = s[0];\
-    d[1] = s[1];\
-    d[2] = s[2];\
-    d[3] = s[3]
+    do{ \
+        d[0] = s[0];\
+        d[1] = s[1];\
+        d[2] = s[2];\
+        d[3] = s[3];\
+    }while(0)
 
 #define WIN_SET_DEFAULT_ATTR(w) \
-    w->x           = DEFAULT_WIN_X;\
-    w->y           = DEFAULT_WIN_Y;\
-    w->width       = DEFAULT_WIN_W;\
-    w->height      = DEFAULT_WIN_H;\
-    w->type        = WINDOWS_DEFAULT_TYPE;\
-    w->title_bg    = DEFAULT_TITLE_BG;\
-    w->title_color = DEFAULT_TITLE_COLOR
+    do{ \
+        w->x           = DEFAULT_WIN_X;\
+        w->y           = DEFAULT_WIN_Y;\
+        w->width       = DEFAULT_WIN_W;\
+        w->height      = DEFAULT_WIN_H;\
+        w->type        = WINDOWS_DEFAULT_TYPE;\
+        w->title_bg    = DEFAULT_TITLE_BG;\
+        w->title_color = DEFAULT_TITLE_COLOR;\
+    }while(0)
 
 #define WIN_SET_POSITION(w,x,y) \
-    w->x = x;\
-    w->y = y
+    do{ \
+        w->x = x; \
+        w->y = y; \
+    }while(0)
 
+#define INIT_BITSMAP(ptr,size) \
+    do{ \
+        (ptr)=malloc((size)/8 + 1); \
+        memset((ptr), 0xff, ((size)/8 + 1)); \
+    }while(0)
 
 //window type field, set the bit is to open this option
 #define WINDOWS_DEFAULT_TYPE   7
@@ -164,6 +180,7 @@ struct window{
     char icon[6];
     //display mem
     struct pixel d_mem[WIN_WIDTH][WIN_HEIGHT];
+    char * bitmaps;
 };
 
 struct windowsManager{
@@ -194,21 +211,33 @@ struct event_manager{
     int key_event_top;
     struct key_event events[0];
 };
+struct framebuf{
+    struct pixel buf[4096][4096];
+    char *bitmaps;
+};
+
 typedef struct event_manager          event_mgr;
 
 
-extern strManager * sm;
-extern event_mgr * em;
-extern struct windowsManager * wm;
-extern struct pixel buf[WIDTH][HEIGHT];
 
 typedef struct window                 win;
 typedef unsigned int                  fps;
 typedef struct event_key_input_buf    EKIB;
 typedef struct event_mouse_input_buf  EMIB;
 
+extern strManager * sm;
+extern event_mgr * em;
+extern struct windowsManager * wm;
+extern struct framebuf *framebuf;
+extern win *default_wins[20];
+
+extern inline int isfillbitmaps(char *maps,int width,int x,int y);
+extern inline void fillbitmaps(char*maps,int width,int x,int y,int value);
+extern inline void setbitmaps(char *master,char *slave,int master_xsize,int slave_xsize,int slave_ysize);
+
 
 void init(void);
+int flush_win_size(fps *f);
 int render_thread(fps *f);
 int event_listener(fps *f);
 int event_execute();
@@ -221,7 +250,7 @@ int draw_windows(win* winptr);
 int draw_all_windows(struct windowsManager * wm);
 struct windowsManager* init_WM(void);
 win* malloc_window(struct windowsManager *wm);
-win* malloc_window_s(struct windowsManager *wm,char bgcolor,char color,char *c);
+win* malloc_window_with_property(struct windowsManager *wm,char bgcolor,char color,char *c);
 int set_d_mem(win *w,char bgcolor,char color,char *c);
 int free_window(struct windowsManager *wm,win *winptr);
 int free_top_window(struct windowsManager *wm);
@@ -268,3 +297,4 @@ void win_height_sub(void);
 void win_maximize(void);
 void win_minimize(void);
 void win_reduction(void);
+#endif
