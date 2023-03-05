@@ -113,58 +113,58 @@ int draw_windows(win* winptr){
 
     int x = winptr->x,
         y = winptr->y,
-        width = winptr->width,
-        height = winptr->height;
+        win_width = winptr->width,
+        win_height = winptr->height;
     char flag = winptr->type;
     if(flag & WT_MINIMIZE && !(flag & WT_MAXIMIZE)) goto no_render;
     if(flag & WT_MAXIMIZE && !(flag & WT_MINIMIZE)){
         x=0;
         y=0;
-        width=width;
-        height=height;
+        win_width=width;
+        win_height=height;
     }
     if(flag & WT_FRAME){
-        for(int indexy = y+1;indexy<y+height-1;indexy++){
+        for(int indexy = y+1;indexy<y+win_height-1;indexy++){
             SET_CHAR(framebuf->buf[x                ][indexy].c,WIN_LEFT);
-            SET_CHAR(framebuf->buf[x+width-1        ][indexy].c,WIN_RIGHT);
+            SET_CHAR(framebuf->buf[x+win_width-1        ][indexy].c,WIN_RIGHT);
         }
-        for(int indexx = x+1;indexx<x+width-1;indexx++){
+        for(int indexx = x+1;indexx<x+win_width-1;indexx++){
             SET_CHAR(framebuf->buf[indexx][y                 ].c,WIN_TOP);
-            SET_CHAR(framebuf->buf[indexx][y+height-1        ].c,WIN_BOTTOM);
+            SET_CHAR(framebuf->buf[indexx][y+win_height-1        ].c,WIN_BOTTOM);
         }
         SET_CHAR(framebuf->buf[x                ][y                 ].c,WIN_TOP_LEFT);
-        SET_CHAR(framebuf->buf[x                ][y+height-1        ].c,WIN_BOTTOM_LEFT);
-        SET_CHAR(framebuf->buf[x+width-1        ][y                 ].c,WIN_TOP_RIGHT);
-        SET_CHAR(framebuf->buf[x+width-1        ][y+height-1        ].c,WIN_BOTTOM_RIGHT);
+        SET_CHAR(framebuf->buf[x                ][y+win_height-1        ].c,WIN_BOTTOM_LEFT);
+        SET_CHAR(framebuf->buf[x+win_width-1        ][y                 ].c,WIN_TOP_RIGHT);
+        SET_CHAR(framebuf->buf[x+win_width-1        ][y+win_height-1        ].c,WIN_BOTTOM_RIGHT);
     }
     if(flag & WT_COTROL_BTN){
         if(flag & WT_FRAME){
-            SET_CHAR(framebuf->buf[x+width-2][y+1               ].c,WIN_CLOSE_BTN);
-            SET_CHAR(framebuf->buf[x+width-3][y+1               ].c,WIN_MAXIMIZE_BTN);
-            SET_CHAR(framebuf->buf[x+width-4][y+1               ].c,WIN_MINIMIZE_BTN);
+            SET_CHAR(framebuf->buf[x+win_width-2][y+1               ].c,WIN_CLOSE_BTN);
+            SET_CHAR(framebuf->buf[x+win_width-3][y+1               ].c,WIN_MAXIMIZE_BTN);
+            SET_CHAR(framebuf->buf[x+win_width-4][y+1               ].c,WIN_MINIMIZE_BTN);
         }else{
-            SET_CHAR(framebuf->buf[x+width-1][y                 ].c,WIN_CLOSE_BTN);
-            SET_CHAR(framebuf->buf[x+width-2][y                 ].c,WIN_MAXIMIZE_BTN);
-            SET_CHAR(framebuf->buf[x+width-3][y                 ].c,WIN_MINIMIZE_BTN);
+            SET_CHAR(framebuf->buf[x+win_width-1][y                 ].c,WIN_CLOSE_BTN);
+            SET_CHAR(framebuf->buf[x+win_width-2][y                 ].c,WIN_MAXIMIZE_BTN);
+            SET_CHAR(framebuf->buf[x+win_width-3][y                 ].c,WIN_MINIMIZE_BTN);
         }
     }
 
     int i,j,xsize,ysize,xstart,ystart;
     if(flag & WT_TITLE || flag & WT_COTROL_BTN){
         if(flag & WT_FRAME){
-            xsize=width-2;
-            ysize=height-3;
+            xsize=win_width-2;
+            ysize=win_height-3;
         }else{
-            xsize=width;
-            ysize=height-1;
+            xsize=win_width;
+            ysize=win_height-1;
         }
     }else{
         if(flag & WT_FRAME){
-            xsize=width-2;
-            ysize=height-2;
+            xsize=win_width-2;
+            ysize=win_height-2;
         }else{
-            xsize=width;
-            ysize=height;
+            xsize=win_width;
+            ysize=win_height;
         }
     }
     if(flag & WT_TITLE || flag & WT_COTROL_BTN){
@@ -194,9 +194,9 @@ int draw_windows(win* winptr){
     }
     if(flag & WT_TITLE){
         if(flag & WT_FRAME){
-            draw_string(winptr->title,x+1,y+1,width-5,1,1,winptr->title_bg,winptr->title_color);
+            draw_string(winptr->title,x+1,y+1,win_width-5,1,1,winptr->title_bg,winptr->title_color);
         }else{
-            draw_string(winptr->title,x  ,y  ,width-3,1,1,winptr->title_bg,winptr->title_color);
+            draw_string(winptr->title,x  ,y  ,win_width-3,1,1,winptr->title_bg,winptr->title_color);
         }
     }
 no_render:
@@ -301,8 +301,4 @@ int win_draw_circle(win *w,int x,int y,int r,struct pixel * point){
         }
     }
     return 0;
-}
-
-void flush_size(){
-    
 }
