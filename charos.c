@@ -116,9 +116,12 @@ void init(void){
     register_key('i',(void *)win_minimize,NULL);
     register_key('r',(void *)win_reduction,NULL);
 
-    while(1){
-        usleep(1000000000);
-    }
+    pthread_join(render_t,NULL);
+    pthread_join(event_listen_t,NULL);
+    pthread_join(event_execute_t,NULL);
+    pthread_join(system_time_t,NULL);
+    pthread_join(flush_win_size_t,NULL);
+
 }
 int flush_win_size(fps *f){
     if(*f <= 0){
